@@ -43,7 +43,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   // create entry on db
-  const user = await user.create({
+  const user = await User.create({
     fullName,
     avatar: avatar.url,
     coverImage: coverImage?.url || "",
@@ -53,7 +53,7 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   // remove password and refresh token field from response
-  const createdUser = await user
+  const createdUser = await User
     .findById(user._id)
     .select("-password -refreshToken");
   if (!createdUser) {
