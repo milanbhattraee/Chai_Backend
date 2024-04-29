@@ -91,7 +91,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
 
-  console.log(email);
+  // console.log(req.body);
 
   if (!username && !email) {
     throw new apiError(400, "username or email required");
@@ -101,20 +101,25 @@ const loginUser = asyncHandler(async (req, res) => {
     $or: [{ username }, { email }],
   });
 
+  
+
 
   if (!user) {
     throw new apiError(404, "Username or Email Doesn't exist");
   }
-
+  // console.log(user);
   const isPasswordValid = await user.isCorrectPassword(password);
+  console.log(isPasswordValid);
+  // console.log(user);
 
   if (!isPasswordValid) {
     throw new apiError(401, "Invalid user creadentials");
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+  
 
-  const loggedInUser = User.findById(user._id).select("-password -refreshToken");
+  const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
   const options = {
     httpOnly: true,
@@ -139,7 +144,8 @@ const loginUser = asyncHandler(async (req, res) => {
 });
  
 const logoutUser = asyncHandler(async(req,res)=>{
-  User.findByIdAndUpdate(
+  console.log(req.user._id)
+  await User.findByIdAndUpdate(
     req.user._id,
     {
       $set: { refreshToken: undefined },
@@ -147,15 +153,17 @@ const logoutUser = asyncHandler(async(req,res)=>{
     { new: true }
   );
 
+
   const options = {
     httpOnly: true,
     secure: true,
   };
+  
 
   return res
     .status(200)
-    .clearCookie(accessToken, options)
-    .clearCookie(refreshToken, options)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User logged out successfully!"));
 });
 
